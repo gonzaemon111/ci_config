@@ -1,0 +1,49 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/ruby:2.5.1-node
+        environment:
+            RAILS_ENV: test
+            DB_HOST: 127.0.0.1
+      - image: circleci/mysql:5.7
+    working_directory: ~/myapp
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "Gemfile.lock" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run:
+          name: bundle install dependencies
+          command: |
+            bundle install --path vendor/bundle
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+
+      # Rubocop Check
+      - run:
+          name: RuboCop Style Check
+          command: bundle exec rubocop
+
+      # Database setup
+      - run:
+          name: Database setup
+          command: |
+            bundle exec rails db:create
+            bundle exec rails db:schema:load
+      # run tests!
+      - run:
+          name: Rspec
+          command: bundle exec rspec --color --require spec_helper --format progress spec
+
+      # Save test results for timing analysis
+      - store_test_results:
+          path: test_results
