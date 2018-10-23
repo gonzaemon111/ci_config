@@ -1,0 +1,10 @@
+version: '2'
+
+options:
+  verbose: true
+syncs:
+  xtreme-sync:
+    src: './xtreme/'
+    sync_strategy: 'unison'
+    sync_userid: '1000'
+    sync_excludes: ['.gitignore', '.git']
